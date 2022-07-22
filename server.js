@@ -2,7 +2,9 @@ const express = require('express')
 const mysql = require('mysql2')
 const inquirer = require('inquirer')
 
-const mainQuestions = require('./lib/questions')
+const questions = require('./lib/questions')
+
+console.log(questions[0].questions)
 
 const PORT  = process.env.PORT || 4000
 
@@ -29,7 +31,7 @@ app.use(express.json());
 
 
   inquirer
-    .prompt(mainQuestions)
+    .prompt(questions[0].questions)
     .then((data) => {
         console.log(data)
     })
