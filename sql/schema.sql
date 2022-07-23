@@ -4,13 +4,12 @@ CREATE DATABASE organization_db;
 USE organization_db;
 
 CREATE TABLE departments (
-    id INT NOT NULL,
-    dep_name VARCHAR(30)
-    PRIMARY KEY (id)
+    id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(30)
 );
 
 CREATE TABLE roles (
-    id INT,
+    id INT PRIMARY KEY AUTO_INCREMENT NOT NULL,
     title VARCHAR(30),
     salary DECIMAL,
     department_id INT,
@@ -21,11 +20,13 @@ CREATE TABLE roles (
 
 -- Foreign key not added in
 CREATE TABLE employees (
-    id INT,
+    id INT PRIMARY KEY AUTO_INCREMENT NOT NULL,
     first_name VARCHAR(30),
     last_name VARCHAR(30),
     role_id INT,
     manager_id INT,
-    PRIMARY KEY (id),
-    
-)
+    CONSTRAINT fk_role FOREIGN KEY (role_id) REFERENCES roles(id),
+    CONSTRAINT fk_manager
+    FOREIGN KEY (manager_id)
+    REFERENCES employees(id)
+);

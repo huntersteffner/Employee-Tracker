@@ -4,7 +4,7 @@ const inquirer = require('inquirer')
 
 const questions = require('./lib/questions')
 
-console.log(questions[0].questions)
+console.log(questions.mainQuestions)
 
 const PORT  = process.env.PORT || 4000
 
@@ -17,21 +17,62 @@ app.use(express.json());
 
 
 // Connect to database
-// const db = mysql.createConnection(
-//     {
-//       host: 'localhost',
-//       // MySQL username,
-//       user: 'root',
-//       // TODO: Add MySQL password here
-//       password: 'hunter',
-//       database: 'movies_db'
-//     },
-//     console.log(`Connected to the movies_db database.`)
-//   );
+const db = mysql.createConnection(
+    {
+      host: 'localhost',
+      // MySQL username,
+      user: 'root',
+      // TODO: Add MySQL password here
+      password: 'hunter',
+      database: 'organization_db'
+    },
+    console.log(`Connected to the organization_db database.`)
+  );
 
+
+
+const addDepartment= () => {
+  inquirer
+    .prompt(questions.addDepartment)
+    .then(function(res) {
+      console.log(res)
+      const query = 'INSERT INTO departments SET ?'
+      db.query(
+        query, {
+          name: res.departmentName
+        },
+        function(err) {
+          if(err) throw err
+          console.table(res)
+          mainMenu()
+        }
+      )
+      mainMenu()
+    })
+}
+const addRole = () => {
+  inquirer
+    .prompt(questions.addRole)
+    .then((data) => {
+      console.log(data)
+      mainMenu()
+    })
+}
+
+
+const mainMenu = () => {
 
   inquirer
-    .prompt(questions[0].questions)
+    .prompt(questions.mainQuestions)
     .then((data) => {
         console.log(data)
+        if(data.menu === 'Add Departments') {
+          addDepartment()
+        }
+        if(data.menu === 'Add Role') {
+          addRole()
+        }
     })
+}
+
+mainMenu()
