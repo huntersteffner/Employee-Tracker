@@ -30,7 +30,6 @@ const db = mysql.createConnection(
   );
 
 
-
 const addDepartment= () => {
   inquirer
     .prompt(questions.addDepartment)
@@ -53,8 +52,46 @@ const addDepartment= () => {
 const addRole = () => {
   inquirer
     .prompt(questions.addRole)
-    .then((data) => {
-      console.log(data)
+    .then((res) => {
+      
+      const query = 'INSERT INTO roles SET ?'
+      db.query(
+        query, {
+          title: res.roleName,
+          salary: res.salary
+        },
+        function(err) {
+          if(err) throw err
+          console.table(res)
+          mainMenu()
+        }
+      )
+      mainMenu()
+    })
+}
+const viewAllRoles = () => {
+  const query = 'SELECT * FROM roles'
+    db.query( query, (err, res) => {
+      if(err) throw err
+      console.table(res)
+      mainMenu()
+    })
+}
+const viewAllEmployees = () => {
+  const query = 'SELECT * FROM employees'
+      db.query( query,
+        function(err, res) {
+          if(err) throw err
+          console.table(res)
+          mainMenu()
+        }
+      )
+}
+const viewAllDepartments = () => {
+  const query = 'SELECT * FROM departments'
+    db.query( query, (err, res) => {
+      if(err) throw err
+      console.table(res)
       mainMenu()
     })
 }
@@ -65,12 +102,36 @@ const mainMenu = () => {
   inquirer
     .prompt(questions.mainQuestions)
     .then((data) => {
-        console.log(data)
-        if(data.menu === 'Add Departments') {
-          addDepartment()
-        }
-        if(data.menu === 'Add Role') {
-          addRole()
+        switch (data.menu) {
+          case 'View All Employees':
+            viewAllEmployees()
+            break
+          case 'Add Employee':
+            // Not complete
+            mainMenu()
+            break
+          case 'Update Employee Role':
+            // Not complete
+            mainMenu()
+            break
+          case 'View All Roles':
+            viewAllRoles()
+            break
+          case 'Add Role':
+            // Not fully working
+            addRole()
+            break
+          case 'View All Departments':
+            viewAllDepartments()
+            break
+          case 'Add Departments':
+            addDepartment()
+            break
+          case 'Quit':
+            // Doesn't quit yet
+            console.log('Goodbye')
+            break
+
         }
     })
 }
