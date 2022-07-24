@@ -4,7 +4,7 @@ const inquirer = require('inquirer')
 
 const questions = require('./lib/questions')
 
-console.log(questions.mainQuestions)
+// console.log(questions.mainQuestions)
 
 const PORT  = process.env.PORT || 4000
 
@@ -15,6 +15,10 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 
+departmentList = ['1 Board', '2 Sales', '3 Engineering', '4 Finance', '5 Legal']
+// console.log(departmentList)
+
+let departmentId = ''
 
 // Connect to database
 const db = mysql.createConnection(
@@ -28,7 +32,9 @@ const db = mysql.createConnection(
     },
     console.log(`Connected to the organization_db database.`)
   );
-
+  // db.query('SELECT department_id, title FROM roles JOIN departments ON roles.department_id = departments.id WHERE departments.name = "Sales"'), function(err, results) {
+  //   console.table(results)
+  // }
 
 const addDepartment= () => {
   inquirer
@@ -52,20 +58,42 @@ const addDepartment= () => {
 const addRole = () => {
   inquirer
     .prompt(questions.addRole)
-    .then((res) => {
-      
-      const query = 'INSERT INTO roles SET ?'
-      db.query(
-        query, {
-          title: res.roleName,
-          salary: res.salary
-        },
-        function(err) {
+    .then(function(res) {
+      console.log(res)
+      const sql = 'SELECT * FROM departments'
+        db.query(sql, (err, results) =>{
           if(err) throw err
-          console.table(res)
-          mainMenu()
-        }
-      )
+          console.table(results)
+          for(let i =0; i<results.length; i++) {
+            if(results[i].name === res.departmentSelect) {
+              departmentId = results[i].id
+            }
+          }
+          console.log(departmentId)
+          const query = 'INSERT INTO roles SET ?'
+          db.query(query, {
+                department_id: departmentId,
+                title: res.roleName,
+                salary: res.salary
+              },(err) => {
+            if(err) throw err
+            console.table(res)
+            mainMenu()
+          })
+        })
+      // const query = 'INSERT INTO roles SET ?'
+      // db.query(
+      //   query, {
+      //     department_id: departmentList,
+      //     title: res.roleName,
+      //     salary: res.salary
+      //   },
+      //   function(err) {
+      //     if(err) throw err
+      //     console.table(res)
+      //     mainMenu()
+      //   }
+      // )
       mainMenu()
     })
 }
