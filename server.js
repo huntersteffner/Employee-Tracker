@@ -1,24 +1,22 @@
-const express = require('express')
 const mysql = require('mysql2')
 const inquirer = require('inquirer')
 
 const questions = require('./lib/questions')
 
-// console.log(questions.mainQuestions)
-
-const PORT  = process.env.PORT || 4000
-
-const app = express()
-
-// Express middleware
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
 
 
-departmentList = ['1 Board', '2 Sales', '3 Engineering', '4 Finance', '5 Legal']
+let departmentList = []
+let roleList = []
+let employeeList = ['Null']
+
 // console.log(departmentList)
 
+
+
+
 let departmentId = ''
+let roleId = ''
+let managerId = ''
 
 // Connect to database
 const db = mysql.createConnection(
@@ -32,15 +30,36 @@ const db = mysql.createConnection(
     },
     console.log(`Connected to the organization_db database.`)
   );
-  // db.query('SELECT department_id, title FROM roles JOIN departments ON roles.department_id = departments.id WHERE departments.name = "Sales"'), function(err, results) {
-  //   console.table(results)
-  // }
+
+  db.query('SELECT * FROM departments', (err, res) => {
+    if(err) throw err
+    for (let i = 0; i < res.length; i++) {
+        const string = `${res[i].name}`
+        departmentList.push(string)
+    }
+})
+
+db.query('SELECT * FROM roles', (err, res) => {
+  if(err) throw err
+  for (let i = 0; i < res.length; i++) {
+      const string = `${res[i].title}`
+      roleList.push(string)
+  }
+})
+db.query('SELECT * FROM employees', (err, res) => {
+  if(err) throw err
+  for (let i = 0; i < res.length; i++) {
+      const string = `${res[i].last_name}`
+      employeeList.push(string)
+  }
+})
+
 
 const addDepartment= () => {
   inquirer
     .prompt(questions.addDepartment)
     .then(function(res) {
-      console.log(res)
+      // console.log(res)
       const query = 'INSERT INTO departments SET ?'
       db.query(
         query, {
@@ -49,17 +68,35 @@ const addDepartment= () => {
         function(err) {
           if(err) throw err
           console.table(res)
+          departmentList.push(res.departmentName)
           mainMenu()
         }
       )
-      mainMenu()
+      // mainMenu()
     })
 }
 const addRole = () => {
   inquirer
-    .prompt(questions.addRole)
+    .prompt([
+      {
+          name: 'roleName',
+          type: 'input',
+          message: 'Please enter the role that you would like to add.'
+      },
+      {
+          name: 'salary',
+          type: 'input',
+          message: `What is the salary for this role?`
+      },
+      {
+          name: 'departmentSelect',
+          type: 'list',
+          message: 'What deparment does this role belong to?',
+          choices: departmentList
+      }
+])
     .then(function(res) {
-      console.log(res)
+      // console.log(res)
       const sql = 'SELECT * FROM departments'
         db.query(sql, (err, results) =>{
           if(err) throw err
@@ -69,7 +106,7 @@ const addRole = () => {
               departmentId = results[i].id
             }
           }
-          console.log(departmentId)
+          // console.log(departmentId)
           const query = 'INSERT INTO roles SET ?'
           db.query(query, {
                 department_id: departmentId,
@@ -78,25 +115,72 @@ const addRole = () => {
               },(err) => {
             if(err) throw err
             console.table(res)
+            roleList.push(res.roleName)
             mainMenu()
           })
         })
-      // const query = 'INSERT INTO roles SET ?'
-      // db.query(
-      //   query, {
-      //     department_id: departmentList,
-      //     title: res.roleName,
-      //     salary: res.salary
-      //   },
-      //   function(err) {
-      //     if(err) throw err
-      //     console.table(res)
-      //     mainMenu()
-      //   }
-      // )
-      mainMenu()
+      
+      // mainMenu()
     })
 }
+const addEmployee = () => {
+  inquirer
+  .prompt([
+    {
+        name: 'fName',
+        type: 'input',
+        message: 'What is this employee\'s first name?'
+    },
+    {
+        name: 'lName',
+        type: 'input',
+        message: 'What is this employee\'s last name?'
+    },
+    {
+        name: 'roleSelect',
+        type: 'list',
+        message: 'What is this employee\'s role?',
+        choices: roleList
+    },
+    {
+        name: 'managerSelect',
+        type: 'list',
+        message: 'What is this employee\'s manager?',
+        choices: employeeList
+    }
+
+])
+  .then(function(res) {
+    const sql = 'SELECT * FROM roles'
+    db.query(sql, (err, results) => {
+      if(err) throw err
+      console.table(results)
+      for(let i = 0; i<results.length; i++) {
+        if(results[i].title === res.roleSelect) {
+          roleId = results[i].id
+      }
+    }
+    const sql2 = 'SELECT * FROM employees'
+    db.query(sql2, (err, results) => {
+      if(err) throw err
+      console.table(results)
+      for(let i = 0; i< results.length;i++) {
+        if(results[i].last_name === res.managerSelect) {
+          console.log(results[i].id)
+          managerId = results[i].id
+        }
+      }
+      const query = 'INSERT INTO employees SET ?'
+      db.query(query, {
+        first_name: res.fName,
+        last_name: res.lName,
+        role_id: roleId,
+        manager_id: managerId,
+      })
+    })
+  })
+  mainMenu()
+})}
 const viewAllRoles = () => {
   const query = 'SELECT * FROM roles'
     db.query( query, (err, res) => {
@@ -123,6 +207,11 @@ const viewAllDepartments = () => {
       mainMenu()
     })
 }
+const updateEmployee = () => {
+  const query = ``
+  db.query
+
+}
 
 
 const mainMenu = () => {
@@ -136,7 +225,7 @@ const mainMenu = () => {
             break
           case 'Add Employee':
             // Not complete
-            mainMenu()
+            addEmployee()
             break
           case 'Update Employee Role':
             // Not complete
@@ -156,8 +245,8 @@ const mainMenu = () => {
             addDepartment()
             break
           case 'Quit':
-            // Doesn't quit yet
             console.log('Goodbye')
+            process.exit(0)
             break
 
         }
