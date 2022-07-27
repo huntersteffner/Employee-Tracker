@@ -1,23 +1,15 @@
+// NPM packages
 const mysql = require('mysql2')
 const inquirer = require('inquirer')
-
+// Imported questions
 const questions = require('./lib/questions')
-
-
-
+// Variables that change
 let departmentList = []
 let roleList = []
 let employeeList = ['Null']
-
-// console.log(departmentList)
-
-
-
-
 let departmentId = ''
 let roleId = ''
 let managerId = ''
-
 // Connect to database
 const db = mysql.createConnection(
     {
@@ -28,9 +20,8 @@ const db = mysql.createConnection(
       password: 'hunter',
       database: 'organization_db'
     },
-    console.log(`Connected to the organization_db database.`)
   );
-
+// Pulls list of answers for when it asks for a list of departments
   db.query('SELECT * FROM departments', (err, res) => {
     if(err) throw err
     for (let i = 0; i < res.length; i++) {
@@ -38,7 +29,7 @@ const db = mysql.createConnection(
         departmentList.push(string)
     }
 })
-
+// Pulls list of answers for when it asks for a list of roles
 db.query('SELECT * FROM roles', (err, res) => {
   if(err) throw err
   for (let i = 0; i < res.length; i++) {
@@ -46,6 +37,7 @@ db.query('SELECT * FROM roles', (err, res) => {
       roleList.push(string)
   }
 })
+// Pulls list of answers for when it asks for a list of employees
 db.query('SELECT * FROM employees', (err, res) => {
   if(err) throw err
   for (let i = 0; i < res.length; i++) {
@@ -53,13 +45,11 @@ db.query('SELECT * FROM employees', (err, res) => {
       employeeList.push(string)
   }
 })
-
-
+// Add department function
 const addDepartment= () => {
   inquirer
     .prompt(questions.addDepartment)
     .then(function(res) {
-      // console.log(res)
       const query = 'INSERT INTO departments SET ?'
       db.query(
         query, {
@@ -68,15 +58,16 @@ const addDepartment= () => {
         function(err) {
           if(err) throw err
           console.table(res)
-          departmentList.push(res.departmentName)
+          departmentList.push(res.departmentName) //Add to list of departments
           mainMenu()
         }
       )
-      // mainMenu()
     })
 }
+// Add role function
 const addRole = () => {
   inquirer
+  // Questions user is prompted with
     .prompt([
       {
           name: 'roleName',
@@ -92,11 +83,11 @@ const addRole = () => {
           name: 'departmentSelect',
           type: 'list',
           message: 'What deparment does this role belong to?',
-          choices: departmentList
+          choices: departmentList //This variable is an array that has all departments inserted into it
       }
 ])
     .then(function(res) {
-      // console.log(res)
+      // To confirm department id
       const sql = 'SELECT * FROM departments'
         db.query(sql, (err, results) =>{
           if(err) throw err
@@ -106,7 +97,6 @@ const addRole = () => {
               departmentId = results[i].id
             }
           }
-          // console.log(departmentId)
           const query = 'INSERT INTO roles SET ?'
           db.query(query, {
                 department_id: departmentId,
@@ -115,16 +105,16 @@ const addRole = () => {
               },(err) => {
             if(err) throw err
             console.table(res)
-            roleList.push(res.roleName)
+            roleList.push(res.roleName) // Add role to list of roles
             mainMenu()
           })
         })
-      
-      // mainMenu()
     })
 }
+// Function to add employee
 const addEmployee = () => {
   inquirer
+  // Questions for when adding an employee
   .prompt([
     {
         name: 'fName',
@@ -140,17 +130,17 @@ const addEmployee = () => {
         name: 'roleSelect',
         type: 'list',
         message: 'What is this employee\'s role?',
-        choices: roleList
+        choices: roleList // This variable is an array with all roles
     },
     {
         name: 'managerSelect',
         type: 'list',
         message: 'What is this employee\'s manager?',
-        choices: employeeList
+        choices: employeeList // This variable is an array with all employees
     }
-
 ])
   .then(function(res) {
+    // To confirm the role id
     const sql = 'SELECT * FROM roles'
     db.query(sql, (err, results) => {
       if(err) throw err
@@ -160,6 +150,7 @@ const addEmployee = () => {
           roleId = results[i].id
       }
     }
+    // To confirm the manager id
     const sql2 = 'SELECT * FROM employees'
     db.query(sql2, (err, results) => {
       if(err) throw err
@@ -170,6 +161,7 @@ const addEmployee = () => {
           managerId = results[i].id
         }
       }
+      // Creating the new employee
       const query = 'INSERT INTO employees SET ?'
       db.query(query, {
         first_name: res.fName,
@@ -181,6 +173,7 @@ const addEmployee = () => {
   })
   mainMenu()
 })}
+// Function to view all existing roles
 const viewAllRoles = () => {
   const query = 'SELECT * FROM roles'
     db.query( query, (err, res) => {
@@ -189,6 +182,7 @@ const viewAllRoles = () => {
       mainMenu()
     })
 }
+// Function to view all existing employees
 const viewAllEmployees = () => {
   const query = 'SELECT * FROM employees'
       db.query( query,
@@ -199,6 +193,7 @@ const viewAllEmployees = () => {
         }
       )
 }
+// Function to view all existing departments
 const viewAllDepartments = () => {
   const query = 'SELECT * FROM departments'
     db.query( query, (err, res) => {
@@ -207,15 +202,9 @@ const viewAllDepartments = () => {
       mainMenu()
     })
 }
-const updateEmployee = () => {
-  const query = ``
-  db.query
-
-}
-
-
+// Function that pulls user to main menu. This is the initial function and is called at the end of all other functions
 const mainMenu = () => {
-
+// Questions that user is prompted with. Switch case then determines what function will run depending on the answer the user inputs.
   inquirer
     .prompt(questions.mainQuestions)
     .then((data) => {
@@ -224,18 +213,15 @@ const mainMenu = () => {
             viewAllEmployees()
             break
           case 'Add Employee':
-            // Not complete
             addEmployee()
             break
           case 'Update Employee Role':
-            // Not complete
             mainMenu()
             break
           case 'View All Roles':
             viewAllRoles()
             break
           case 'Add Role':
-            // Not fully working
             addRole()
             break
           case 'View All Departments':
@@ -246,11 +232,12 @@ const mainMenu = () => {
             break
           case 'Quit':
             console.log('Goodbye')
+            // To quit the program
             process.exit(0)
             break
-
         }
     })
 }
-
+// Initialize the program
+console.log('Welcome to the Employee Tracker\n')
 mainMenu()
